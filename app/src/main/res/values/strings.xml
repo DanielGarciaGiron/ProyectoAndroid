@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">UVG map</string>
-    <string name="title_activity_maps">Map</string>
-    <string name="title_activity_main">Main Menu</string>
+    <string name="app_name">UVG</string>
+    <string name="title_activity_maps">Mapa UVG</string>
+    <string name="title_activity_main">Menu Principal</string>
 </resources>

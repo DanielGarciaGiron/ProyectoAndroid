@@ -1,14 +1,16 @@
 package com.example.polygons;
 
+import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
-
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.CustomCap;
 import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
@@ -21,11 +23,12 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
-
 import java.util.Arrays;
 import java.util.List;
-
 import static com.example.polygons.R.id.map;
+
+
+
 
 
 /**
@@ -34,17 +37,11 @@ import static com.example.polygons.R.id.map;
  */
 public class PolyActivity extends AppCompatActivity
         implements
-                OnMapReadyCallback,
-                GoogleMap.OnPolylineClickListener,
-                GoogleMap.OnPolygonClickListener {
+        OnMapReadyCallback,
+        GoogleMap.OnPolylineClickListener {
 
     private static final int COLOR_BLACK_ARGB = 0xff000000;
-    private static final int COLOR_WHITE_ARGB = 0xffffffff;
     private static final int COLOR_GREEN_ARGB = 0xff388E3C;
-    private static final int COLOR_PURPLE_ARGB = 0xff81C784;
-    private static final int COLOR_ORANGE_ARGB = 0xffF57F17;
-    private static final int COLOR_BLUE_ARGB = 0xffF9A825;
-
     private static final int POLYLINE_STROKE_WIDTH_PX = 12;
     private static final int POLYGON_STROKE_WIDTH_PX = 8;
     private static final int PATTERN_DASH_LENGTH_PX = 20;
@@ -52,16 +49,43 @@ public class PolyActivity extends AppCompatActivity
     private static final PatternItem DOT = new Dot();
     private static final PatternItem DASH = new Dash(PATTERN_DASH_LENGTH_PX);
     private static final PatternItem GAP = new Gap(PATTERN_GAP_LENGTH_PX);
-
-    // Create a stroke pattern of a gap followed by a dot.
     private static final List<PatternItem> PATTERN_POLYLINE_DOTTED = Arrays.asList(GAP, DOT);
-
-    // Create a stroke pattern of a gap followed by a dash.
     private static final List<PatternItem> PATTERN_POLYGON_ALPHA = Arrays.asList(GAP, DASH);
 
-    // Create a stroke pattern of a dot followed by a gap, a dash, and another gap.
-    private static final List<PatternItem> PATTERN_POLYGON_BETA =
-            Arrays.asList(DOT, GAP, DASH, GAP);
+
+    /*
+    private static final String TAG = PolyActivity.class.getSimpleName();
+    private GoogleMap mMap;
+    private CameraPosition mCameraPosition;
+    private GeoDataClient mGeoDataClient;
+    private PlaceDetectionClient mPlaceDetectionClient;
+
+    // The entry point to the Fused Location Provider.
+    private FusedLocationProviderClient mFusedLocationProviderClient;
+
+    // A default location (Sydney, Australia) and default zoom to use when location permission is
+    // not granted.
+    private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
+    private static final int DEFAULT_ZOOM = 15;
+    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    private boolean mLocationPermissionGranted;
+
+    // The geographical location where the device is currently located. That is, the last-known
+    // location retrieved by the Fused Location Provider.
+    private Location mLastKnownLocation;
+
+    // Keys for storing activity state.
+    private static final String KEY_CAMERA_POSITION = "camera_position";
+    private static final String KEY_LOCATION = "location";
+
+    // Used for selecting the current place.
+    private static final int M_MAX_ENTRIES = 5;
+    private String[] mLikelyPlaceNames;
+    private String[] mLikelyPlaceAddresses;
+    private String[] mLikelyPlaceAttributions;
+    private LatLng[] mLikelyPlaceLatLngs;
+    */
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +98,14 @@ public class PolyActivity extends AppCompatActivity
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(map);
         mapFragment.getMapAsync(this);
+
+        //-------------------------------------------------------------------------
+        //Retrieve the destination location
+        Intent intent = getIntent();
+        String IDreceived = intent.getStringExtra((Selector.DestinationID));
+        //**DEBUG**
+        //Toast.makeText(getApplicationContext(), IDreceived ,Toast.LENGTH_SHORT).show();
+
     }
 
     /**
@@ -100,6 +132,7 @@ public class PolyActivity extends AppCompatActivity
         // Style the polyline.
         stylePolyline(polyline1);
 
+        //Marks the surrounding area of the university.
         // Add polygons to indicate areas on the map.
         Polygon polygon1 = googleMap.addPolygon(new PolygonOptions()
                 .clickable(true)
@@ -113,14 +146,14 @@ public class PolyActivity extends AppCompatActivity
         // Style the polygon.
         stylePolygon(polygon1);
 
-
-        // Position the map's camera near Alice Springs in the center of Australia,
+        // Position the map's camera near Alice Springs in the center of the university,
         // and set the zoom factor so most of Australia shows on the screen.
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-23.684, 133.903), 4));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(14.60496, -90.49153), 18));
 
         // Set listeners for click events.
         googleMap.setOnPolylineClickListener(this);
-        googleMap.setOnPolygonClickListener(this);
+
+
     }
 
     /**
@@ -159,36 +192,9 @@ public class PolyActivity extends AppCompatActivity
      * @param polygon The polygon object that needs styling.
      */
     private void stylePolygon(Polygon polygon) {
-        String type = "";
-        // Get the data object stored with the polygon.
-        if (polygon.getTag() != null) {
-            type = polygon.getTag().toString();
-        }
-
-        List<PatternItem> pattern = null;
-        int strokeColor = COLOR_BLACK_ARGB;
-        int fillColor = COLOR_WHITE_ARGB;
-
-        switch (type) {
-            // If no type is given, allow the API to use the default.
-            case "alpha":
-                // Apply a stroke pattern to render a dashed line, and define colors.
-                pattern = PATTERN_POLYGON_ALPHA;
-                strokeColor = COLOR_GREEN_ARGB;
-                fillColor = COLOR_PURPLE_ARGB;
-                break;
-            case "beta":
-                // Apply a stroke pattern to render a line of dots and dashes, and define colors.
-                pattern = PATTERN_POLYGON_BETA;
-                strokeColor = COLOR_ORANGE_ARGB;
-                fillColor = COLOR_BLUE_ARGB;
-                break;
-        }
-
-        polygon.setStrokePattern(pattern);
+        polygon.setStrokePattern(PATTERN_POLYGON_ALPHA);
         polygon.setStrokeWidth(POLYGON_STROKE_WIDTH_PX);
-        polygon.setStrokeColor(strokeColor);
-        polygon.setFillColor(fillColor);
+        polygon.setStrokeColor(COLOR_GREEN_ARGB);
     }
 
     /**
@@ -204,23 +210,9 @@ public class PolyActivity extends AppCompatActivity
             // The default pattern is a solid stroke.
             polyline.setPattern(null);
         }
-
-        Toast.makeText(this, "Route type " + polyline.getTag().toString(),
-                Toast.LENGTH_SHORT).show();
     }
 
-    /**
-     * Listens for clicks on a polygon.
-     * @param polygon The polygon object that the user has clicked.
-     */
-    @Override
-    public void onPolygonClick(Polygon polygon) {
-        // Flip the values of the red, green, and blue components of the polygon's color.
-        int color = polygon.getStrokeColor() ^ 0x00ffffff;
-        polygon.setStrokeColor(color);
-        color = polygon.getFillColor() ^ 0x00ffffff;
-        polygon.setFillColor(color);
 
-        Toast.makeText(this, "Area type " + polygon.getTag().toString(), Toast.LENGTH_SHORT).show();
-    }
 }
+
+
