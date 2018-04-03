@@ -28,7 +28,7 @@ public class Selector extends AppCompatActivity {
         setContentView(R.layout.activity_selector);
 
         //ListView y su contenido
-        String[] AvailableDestinations = {"Carrera #1", "Carrera #2","Carrera #3", "Carrera #4","Carrera #5", "Carrera #6","Carrera #7", "Carrera #8"};
+        String[] AvailableDestinations = {"Edificio A", "Edificio B","Edificio C", "Edificio H","Edificio J", "Cancha Polideportiva","Plaza Paiz Riera", "Auditorio"};
         myListView = (ListView) findViewById(R.id.DirectionsList);
 
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.activity_list_item, android.R.id.text1,AvailableDestinations)

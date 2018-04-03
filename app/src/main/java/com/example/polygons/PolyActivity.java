@@ -23,6 +23,16 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Build;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import java.util.Arrays;
 import java.util.List;
 import static com.example.polygons.R.id.map;
@@ -40,6 +50,7 @@ public class PolyActivity extends AppCompatActivity
         OnMapReadyCallback,
         GoogleMap.OnPolylineClickListener {
 
+    // Variables for the map
     private static final int COLOR_BLACK_ARGB = 0xff000000;
     private static final int COLOR_GREEN_ARGB = 0xff388E3C;
     private static final int POLYLINE_STROKE_WIDTH_PX = 12;
@@ -52,39 +63,14 @@ public class PolyActivity extends AppCompatActivity
     private static final List<PatternItem> PATTERN_POLYLINE_DOTTED = Arrays.asList(GAP, DOT);
     private static final List<PatternItem> PATTERN_POLYGON_ALPHA = Arrays.asList(GAP, DASH);
 
-
-    /*
-    private static final String TAG = PolyActivity.class.getSimpleName();
-    private GoogleMap mMap;
-    private CameraPosition mCameraPosition;
-    private GeoDataClient mGeoDataClient;
-    private PlaceDetectionClient mPlaceDetectionClient;
-
-    // The entry point to the Fused Location Provider.
-    private FusedLocationProviderClient mFusedLocationProviderClient;
-
-    // A default location (Sydney, Australia) and default zoom to use when location permission is
-    // not granted.
-    private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
-    private static final int DEFAULT_ZOOM = 15;
-    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-    private boolean mLocationPermissionGranted;
-
-    // The geographical location where the device is currently located. That is, the last-known
-    // location retrieved by the Fused Location Provider.
-    private Location mLastKnownLocation;
-
-    // Keys for storing activity state.
-    private static final String KEY_CAMERA_POSITION = "camera_position";
-    private static final String KEY_LOCATION = "location";
-
-    // Used for selecting the current place.
-    private static final int M_MAX_ENTRIES = 5;
-    private String[] mLikelyPlaceNames;
-    private String[] mLikelyPlaceAddresses;
-    private String[] mLikelyPlaceAttributions;
-    private LatLng[] mLikelyPlaceLatLngs;
-    */
+    // Variables for the GPS
+    private LocationManager locationManager;
+    private LocationListener listener;
+    private double Latitude;
+    private double Longitude;
+    private double EndLatitude;
+    private double EndLongitude;
+    private String IDreceived;
 
 
     @Override
@@ -102,11 +88,64 @@ public class PolyActivity extends AppCompatActivity
         //-------------------------------------------------------------------------
         //Retrieve the destination location
         Intent intent = getIntent();
-        String IDreceived = intent.getStringExtra((Selector.DestinationID));
-        //**DEBUG**
-        //Toast.makeText(getApplicationContext(), IDreceived ,Toast.LENGTH_SHORT).show();
+        IDreceived = intent.getStringExtra((Selector.DestinationID));
+        Toast.makeText(getApplicationContext(),  IDreceived ,Toast.LENGTH_SHORT).show();
 
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+
+        listener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                Latitude = location.getLatitude();
+                Longitude = location.getLongitude();
+                Toast.makeText(getApplicationContext(),  location.getLongitude() + " " + location.getLatitude() ,Toast.LENGTH_SHORT).show();
+
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+
+                Intent i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(i);
+            }
+        };
+        configureLocation();
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 10:
+                configureLocation();
+                break;
+            default:
+                break;
+        }
+    }
+
+    void configureLocation(){
+        // first check for permissions
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.INTERNET}
+                        ,10);
+            }
+            return;
+        }
+
+                locationManager.requestLocationUpdates("gps", 5000, 0, listener);
+        }
 
     /**
      * Manipulates the map when it's available.
@@ -116,21 +155,53 @@ public class PolyActivity extends AppCompatActivity
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        if(IDreceived.equals("Edificio A")){
+            EndLatitude = 14.604637;
+            EndLongitude = -90.488796;
+        }
+        if(IDreceived.equals("Edificio B")){
+            EndLatitude = 14.604661;
+            EndLongitude = -90.489982;
+        }
+        if(IDreceived.equals("Edificio C")){
+            EndLatitude = 14.605036;
+            EndLongitude = -90.489929;
+        }
+        if(IDreceived.equals("Edificio H")){
+            EndLatitude = 14.605279;
+            EndLongitude = -90.488834;
+        }
+        if(IDreceived.equals("Edificio J")){
+            EndLatitude = 14.605419;
+            EndLongitude = -90.488107;
+        }
+        if(IDreceived.equals("Cancha Polideportiva")){
+            EndLatitude = 14.605089;
+            EndLongitude = -90.489544;
+        }
+        if(IDreceived.equals("Plaza Paiz Riera")){
+            EndLatitude = 14.604683;
+            EndLongitude = -90.489235;
+        }
+        if(IDreceived.equals("Auditorio")){
+            EndLatitude = 14.604890;
+            EndLongitude = -90.4489088;
+        }
+
 
         // Add polylines to the map.
         // Polylines are useful to show a route or some other connection between points.
         Polyline polyline1 = googleMap.addPolyline(new PolylineOptions()
                 .clickable(true)
                 .add(
-                        new LatLng(14.604838, -90.490741),
-                        new LatLng(14.604814, -90.490241),
-                        new LatLng(14.604884, -90.489878),
-                        new LatLng(14.604679, -90.489772),
-                        new LatLng(14.604587, -90.489602)));
+                        new LatLng(EndLatitude, EndLongitude),
+                        new LatLng(Latitude, Longitude),
+                        new LatLng(14.604109, -90.488787)));
         // Store a data object with the polyline, used here to indicate an arbitrary type.
         polyline1.setTag("A");
         // Style the polyline.
         stylePolyline(polyline1);
+
 
         //Marks the surrounding area of the university.
         // Add polygons to indicate areas on the map.
@@ -152,7 +223,6 @@ public class PolyActivity extends AppCompatActivity
 
         // Set listeners for click events.
         googleMap.setOnPolylineClickListener(this);
-
 
     }
 
